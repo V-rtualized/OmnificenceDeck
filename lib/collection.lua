@@ -136,6 +136,8 @@ local function build_tag_collection(filter_func)
         local temp_tag = Tag(v.key, true)
         if not v.discovered then temp_tag.hide_ability = true end
         local tag_ui, tag_sprite = temp_tag:generate_UI()
+        local tag_key = v.key
+        tag_sprite.click = function(_self) G.FUNCS.od_select_tag({config = {ref_table = {key = tag_key}}}) end
         local row = math.ceil((k - 1) / TAG_COLS + 0.001)
         local col = 1 + ((k - 1) % TAG_COLS)
         tag_matrix[row][col] = {n = G.UIT.C, config = {align = "cm", padding = 0.1}, nodes = {tag_ui}}

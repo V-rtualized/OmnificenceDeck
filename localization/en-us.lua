@@ -104,7 +104,7 @@ return {
 				name = "Tag Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
-					"{C:attention}#1#{} {C:attention}Tag{} choices",
+					"{C:attention}#1#{} Tag choices",
 				},
 			},
 		},

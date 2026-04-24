@@ -2,7 +2,8 @@
     "id": "OmnificenceDeck",
     "name": "Omnificence Deck",
     "author": [
-        "Virtualized"
+        "Virtualized",
+        "Perk Eyo"
     ],
     "description": "Adds Essence versions of every card type.",
     "prefix": "omnificence",

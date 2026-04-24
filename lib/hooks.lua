@@ -52,6 +52,15 @@ function get_pack(_key, _type)
     return orig_get_pack(_key, _type)
 end
 
+-- Replace blind-skip tags with OD tag essence
+local orig_get_next_tag_key = get_next_tag_key
+function get_next_tag_key(append)
+    if od_active() and not G.FORCE_TAG then
+        return 'tag_omnificence_tag'
+    end
+    return orig_get_next_tag_key(append)
+end
+
 -- Replace shop voucher with OD voucher
 local orig_add_voucher_to_shop = SMODS.add_voucher_to_shop
 function SMODS.add_voucher_to_shop(key, dont_save)
@@ -130,6 +139,27 @@ function CardArea:add_to_highlighted(card, silent)
     -- Direct set instead of card:highlight(true) to avoid creating use_button on jokers/consumables
     card.highlighted = true
     if not silent then play_sound('cardSlide1') end
+end
+
+G.FUNCS.od_select_tag = function(e)
+    local tag_key = e.config.ref_table.key
+    G.E_MANAGER:add_event(Event({func = function()
+        G.FUNCS.exit_overlay_menu()
+        return true
+    end}))
+    G.E_MANAGER:add_event(Event({func = function()
+        add_tag(Tag(tag_key))
+        return true
+    end}))
+    G.E_MANAGER:add_event(Event({func = function()
+        for i = 1, #G.GAME.tags do
+            G.GAME.tags[i]:apply_to_run({type = 'immediate'})
+        end
+        for i = 1, #G.GAME.tags do
+            if G.GAME.tags[i]:apply_to_run({type = 'new_blind_choice'}) then break end
+        end
+        return true
+    end}))
 end
 
 -- Buy handler for collection jokers and consumables.
