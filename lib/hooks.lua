@@ -9,6 +9,12 @@ local OD_CARD_MAP = {
     Spectral = 'c_omnificence_spectral',
 }
 
+-- Maps vanilla tag key_append sources to rarity-specific joker essence keys
+local JOKER_ESSENCE_BY_SOURCE = {
+    uta = 'j_omnificence_joker_uncommon',
+    rta = 'j_omnificence_joker_rare',
+}
+
 local function od_active()
     return G.GAME and G.GAME.modifiers and G.GAME.modifiers.omnificence
 end
@@ -58,7 +64,14 @@ end
 local orig_create_card = create_card
 function create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
     if area and not forced_key and od_active() and (area == G.shop_jokers or area == G.pack_cards) then
-        local od_key = check_soul_spawn(_type, soulable) or OD_CARD_MAP[_type]
+        local od_key = check_soul_spawn(_type, soulable)
+        if not od_key then
+            if _type == 'Joker' then
+                od_key = JOKER_ESSENCE_BY_SOURCE[key_append] or OD_CARD_MAP['Joker']
+            else
+                od_key = OD_CARD_MAP[_type]
+            end
+        end
         if od_key then
             return orig_create_card(_type, area, legendary, _rarity, skip_materialize, false, od_key, key_append)
         end
@@ -348,6 +361,11 @@ G.FUNCS.buy_from_shop = function(e)
         else
             local target = set == 'Joker' and G.jokers or G.consumeables
             local nc = create_card(set, target, nil, nil, nil, nil, center_key)
+            if set == 'Joker' then
+                local ess_ed = OD._joker_essence_edition
+                OD._joker_essence_edition = nil
+                if ess_ed and next(ess_ed) then nc:set_edition(ess_ed) end
+            end
             if sticker then nc.sticker = sticker end
             nc:add_to_deck()
             target:emplace(nc)
@@ -558,6 +576,9 @@ G.FUNCS.use_card = function(e, mute, nosave)
         G.GAME.used_jokers[ck] = true
     end
 
+    if entry.menu == 'Joker' then
+        OD._joker_essence_edition = card.edition
+    end
     local filter = make_filter(entry)
     G.E_MANAGER:add_event(Event({
         func = function()

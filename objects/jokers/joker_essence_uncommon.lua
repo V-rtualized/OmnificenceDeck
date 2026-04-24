@@ -13,6 +13,7 @@ SMODS.Joker {
     end,
     calculate = function(self, card, context)
         if context.buying_self then
+            OD._joker_essence_edition = card.edition
             card:start_dissolve()
             G.E_MANAGER:add_event(Event({
                 func = function()
