@@ -1,0 +1,11 @@
+{
+    "id": "OmnificenceDeck",
+    "name": "Omnificence Deck",
+    "author": [
+        "Virtualized"
+    ],
+    "description": "Adds Essence versions of every card type.",
+    "prefix": "omnificence",
+    "main_file": "core.lua",
+    "version": "1.0.0"
+}

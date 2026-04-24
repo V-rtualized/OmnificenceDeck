@@ -1,4 +1,4 @@
--- UC.open_collection_menu(card_type, filter_func)
+-- OD.open_collection_menu(card_type, filter_func)
 -- Opens a paginated collection browser for the given card type.
 -- card_type: "Joker"|"Tarot"|"Planet"|"Spectral"|"Voucher"|"Booster Pack"|"Tag"|"BlackHole"
 -- filter_func: optional function(center) -> bool; only matching cards are shown
@@ -33,7 +33,7 @@ local CONFIGS = {
             no_materialize = true,
             modify_card = function(card, center)
                 card.sticker = get_joker_win_sticker(center)
-                card._uc_collection = true
+                card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -45,7 +45,7 @@ local CONFIGS = {
         rows = {5, 6},
         args = {
             modify_card = function(card, center)
-                card._uc_collection = true
+                card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -57,7 +57,7 @@ local CONFIGS = {
         rows = {6, 6},
         args = {
             modify_card = function(card, center)
-                card._uc_collection = true
+                card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -69,7 +69,7 @@ local CONFIGS = {
         rows = {4, 5},
         args = {
             modify_card = function(card, center)
-                card._uc_collection = true
+                card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -83,7 +83,7 @@ local CONFIGS = {
             area_type = 'voucher',
             modify_card = function(card, center, i, j)
                 card.ability.order = i + (j - 1) * 4
-                card._uc_collection = true
+                card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -98,7 +98,7 @@ local CONFIGS = {
             w_mod = 1.25,
             card_scale = 1.27,
             modify_card = function(card, center)
-                card._uc_collection = true
+                card._od_collection = true
                 card:set_cost()
                 create_shop_card_ui(card)
             end,
@@ -175,8 +175,8 @@ local function build_tag_collection(filter_func)
     })
 end
 
-function UC.open_collection_menu(card_type, filter_func)
-    assert(type(card_type) == 'string', "UC.open_collection_menu: card_type must be a string")
+function OD.open_collection_menu(card_type, filter_func)
+    assert(type(card_type) == 'string', "OD.open_collection_menu: card_type must be a string")
 
     if card_type == 'Tag' then
         G.FUNCS.overlay_menu{definition = build_tag_collection(filter_func)}
@@ -184,7 +184,7 @@ function UC.open_collection_menu(card_type, filter_func)
     end
 
     if card_type == 'BlackHole' then
-        local planet_filter = UC.pool_count.filter_consumables('Planet')
+        local planet_filter = OD.pool_count.filter_consumables('Planet')
         local planets = apply_filter(G.P_CENTER_POOLS['Planet'], planet_filter)
         local planet_count = #planets
 
@@ -196,9 +196,9 @@ function UC.open_collection_menu(card_type, filter_func)
         local args = {
             back_func = 'exit_overlay_menu',
             modify_card = function(card, center)
-                card._uc_collection      = true
-                card._uc_bh_select       = true
-                card._uc_bh_planet_count = planet_count
+                card._od_collection      = true
+                card._od_bh_select       = true
+                card._od_bh_planet_count = planet_count
                 card.cost = 0
                 create_shop_card_ui(card)
                 remove_price_tag(card)
@@ -214,7 +214,7 @@ function UC.open_collection_menu(card_type, filter_func)
 
         if G.your_collection then
             for _, area in pairs(G.your_collection) do
-                area._uc_collection = true
+                area._od_collection = true
             end
         end
 
@@ -223,7 +223,7 @@ function UC.open_collection_menu(card_type, filter_func)
     end
 
     local config = CONFIGS[card_type]
-    assert(config, "UC.open_collection_menu: unknown card_type '" .. card_type .. "'")
+    assert(config, "OD.open_collection_menu: unknown card_type '" .. card_type .. "'")
 
     local pool = apply_filter(G.P_CENTER_POOLS[config.pool_key], filter_func)
 
@@ -246,10 +246,9 @@ function UC.open_collection_menu(card_type, filter_func)
     -- Tag the CardAreas so our can_highlight/add_to_highlighted hooks enable click-to-highlight
     if G.your_collection then
         for _, area in pairs(G.your_collection) do
-            area._uc_collection = true
+            area._od_collection = true
         end
     end
 
     G.FUNCS.overlay_menu{definition = definition}
 end
-

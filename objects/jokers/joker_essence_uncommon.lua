@@ -1,24 +1,21 @@
-SMODS.Consumable {
-    key = "black_hole",
-    set = "Spectral",
-    atlas = "unlimited_black_hole",
+SMODS.Joker {
+    key = "joker_uncommon",
+    atlas = "joker",
     pos = { x = 0, y = 0 },
-    cost = 4,
+    soul_pos = { x = 1, y = 0 },
+    rarity = 2,
+    cost = 5,
     unlocked = true,
     discovered = true,
-    can_use = function(self, card)
-        return true
-    end,
     loc_vars = function(self, info_queue, card)
-        return { vars = { UC.pool_count.consumables('Planet') } }
+        return { vars = { OD.pool_count.jokers(2) } }
     end,
     calculate = function(self, card, context)
         if context.buying_self then
-            G.GAME.used_jokers['c_uc_black_hole'] = true
             card:start_dissolve()
             G.E_MANAGER:add_event(Event({
                 func = function()
-                    UC.open_collection_menu('BlackHole')
+                    OD.open_collection_menu('Joker', OD.pool_count.filter_jokers(2))
                     return true
                 end,
             }))

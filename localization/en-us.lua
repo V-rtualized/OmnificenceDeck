@@ -1,7 +1,7 @@
 return {
 	descriptions = {
 		Back = {
-			b_uc_omnificence = {
+			b_omnificence_omnificence = {
 				name = "Omnificence Deck",
 				text = {
 					"All {C:attention}Purchases{} are",
@@ -10,29 +10,29 @@ return {
 			},
 		},
 		Joker = {
-			j_uc_joker = {
-				name = "Unlimited Joker",
+			j_omnificence_joker = {
+				name = "Joker Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:joker}Joker{} choices",
 				},
 			},
-			j_uc_joker_common = {
-				name = "Unlimited Common Joker",
+			j_omnificence_joker_common = {
+				name = "Common Joker Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} Common {C:joker}Joker{} choices",
 				},
 			},
-			j_uc_joker_uncommon = {
-				name = "Unlimited Uncommon Joker",
+			j_omnificence_joker_uncommon = {
+				name = "Uncommon Joker Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} Uncommon {C:joker}Joker{} choices",
 				},
 			},
-			j_uc_joker_rare = {
-				name = "Unlimited Rare Joker",
+			j_omnificence_joker_rare = {
+				name = "Rare Joker Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} Rare {C:joker}Joker{} choices",
@@ -40,8 +40,8 @@ return {
 			},
 		},
 		Other = {
-			p_uc_booster = {
-				name = "Unlimited Booster Pack",
+			p_omnificence_booster = {
+				name = "Booster Pack Essence",
 				text = {
 					"Open {C:attention}1{} of up to",
 					"{C:attention}#1#{} Booster Pack choices",
@@ -49,8 +49,8 @@ return {
 			},
 		},
 		Planet = {
-			c_uc_planet = {
-				name = "Unlimited Planet",
+			c_omnificence_planet = {
+				name = "Planet Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:planet}Planet{} card choices",
@@ -58,22 +58,22 @@ return {
 			},
 		},
 		Spectral = {
-			c_uc_spectral = {
-				name = "Unlimited Spectral",
+			c_omnificence_spectral = {
+				name = "Spectral Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:spectral}Spectral{} card choices",
 				},
 			},
-			c_uc_soul = {
-				name = "Unlimited Soul",
+			c_omnificence_soul = {
+				name = "Soul Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:legendary}Legendary {C:joker}Joker{} choices",
 				},
 			},
-			c_uc_black_hole = {
-				name = "Unlimited Black Hole",
+			c_omnificence_black_hole = {
+				name = "Black Hole Essence",
 				text = {
 					"Choose a {C:planet}Planet{} card,",
 					"level it up {C:attention}#1#{} times",
@@ -82,8 +82,8 @@ return {
 			},
 		},
 		Tag = {
-			tag_uc_tag = {
-				name = "Unlimited Tag",
+			tag_omnificence_tag = {
+				name = "Tag Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:attention}Tag{} choices",
@@ -91,8 +91,8 @@ return {
 			},
 		},
 		Tarot = {
-			c_uc_tarot = {
-				name = "Unlimited Tarot",
+			c_omnificence_tarot = {
+				name = "Tarot Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:tarot}Tarot{} card choices",
@@ -100,8 +100,8 @@ return {
 			},
 		},
 		Voucher = {
-			v_uc_voucher = {
-				name = "Unlimited Voucher",
+			v_omnificence_voucher = {
+				name = "Voucher Essence",
 				text = {
 					"Get {C:attention}1{} of up to",
 					"{C:attention}#1#{} {C:voucher}Voucher{} choices",
@@ -111,7 +111,7 @@ return {
 	},
 	misc = {
 		dictionary = {
-			k_booster_group_p_uc_booster = "Unlimited Pack",
+			k_booster_group_p_omnificence_booster = "Essence Pack",
 		},
 	},
 }

@@ -8,14 +8,14 @@ SMODS.Joker {
     unlocked = true,
     discovered = true,
     loc_vars = function(self, info_queue, card)
-        return { vars = { UC.pool_count.jokers(1) } }
+        return { vars = { OD.pool_count.jokers(1) } }
     end,
     calculate = function(self, card, context)
         if context.buying_self then
             card:start_dissolve()
             G.E_MANAGER:add_event(Event({
                 func = function()
-                    UC.open_collection_menu('Joker', UC.pool_count.filter_jokers(1))
+                    OD.open_collection_menu('Joker', OD.pool_count.filter_jokers(1))
                     return true
                 end,
             }))

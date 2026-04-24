@@ -1,9 +1,9 @@
--- Maps card set types to their UC replacement keys
-local UC_CARD_MAP = {
-    Joker    = 'j_uc_joker',
-    Tarot    = 'c_uc_tarot',
-    Planet   = 'c_uc_planet',
-    Spectral = 'c_uc_spectral',
+-- Maps card set types to their OD replacement keys
+local OD_CARD_MAP = {
+    Joker    = 'j_omnificence_joker',
+    Tarot    = 'c_omnificence_tarot',
+    Planet   = 'c_omnificence_planet',
+    Spectral = 'c_omnificence_spectral',
 }
 
 -- Mirror vanilla's soul-spawn probability checks so the RNG sequence is preserved.
@@ -11,65 +11,65 @@ local UC_CARD_MAP = {
 -- into orig_create_card so vanilla's own check is skipped (guarded by not forced_key).
 local function check_soul_spawn(_type, soulable)
     if not soulable then return nil end
-    local uc_key = nil
+    local od_key = nil
     if (_type == 'Tarot' or _type == 'Spectral' or _type == 'Tarot_Planet') and
-        not (G.GAME.used_jokers['c_uc_soul'] and not SMODS.showman('c_uc_soul')) then
+        not (G.GAME.used_jokers['c_omnificence_soul'] and not SMODS.showman('c_omnificence_soul')) then
         if pseudorandom('soul_'..(_type)..G.GAME.round_resets.ante) > 0.997 then
-            uc_key = 'c_uc_soul'
+            od_key = 'c_omnificence_soul'
         end
     end
     if (_type == 'Planet' or _type == 'Spectral') and
-        not (G.GAME.used_jokers['c_uc_black_hole'] and not SMODS.showman('c_uc_black_hole')) then
+        not (G.GAME.used_jokers['c_omnificence_black_hole'] and not SMODS.showman('c_omnificence_black_hole')) then
         if pseudorandom('soul_'..(_type)..G.GAME.round_resets.ante) > 0.997 then
-            uc_key = 'c_uc_black_hole'
+            od_key = 'c_omnificence_black_hole'
         end
     end
-    return uc_key
+    return od_key
 end
 
 -- Replace jokers/consumables in shop slots and pack openings
 local orig_create_card = create_card
 function create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
     if area and not forced_key and (area == G.shop_jokers or area == G.pack_cards) then
-        local uc_key = check_soul_spawn(_type, soulable) or UC_CARD_MAP[_type]
-        if uc_key then
-            return orig_create_card(_type, area, legendary, _rarity, skip_materialize, false, uc_key, key_append)
+        local od_key = check_soul_spawn(_type, soulable) or OD_CARD_MAP[_type]
+        if od_key then
+            return orig_create_card(_type, area, legendary, _rarity, skip_materialize, false, od_key, key_append)
         end
     end
     return orig_create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
 end
 
--- Replace shop booster packs with UC booster
+-- Replace shop booster packs with OD booster
 local orig_get_pack = get_pack
 function get_pack(_key, _type)
     if _key == 'shop_pack' then
-        return G.P_CENTERS['p_uc_booster']
+        return G.P_CENTERS['p_omnificence_booster']
     end
     return orig_get_pack(_key, _type)
 end
 
--- Replace shop voucher with UC voucher
+-- Replace shop voucher with OD voucher
 local orig_add_voucher_to_shop = SMODS.add_voucher_to_shop
 function SMODS.add_voucher_to_shop(key, dont_save)
-    return orig_add_voucher_to_shop('v_uc_voucher', dont_save)
+    return orig_add_voucher_to_shop('v_omnificence_voucher', dont_save)
 end
 
--- Force cost = 0 for UC placeholder joker and booster (shown as '??')
+-- Force cost = 0 for OD placeholder joker and booster (shown as '??')
 local orig_Card_set_cost = Card.set_cost
 function Card:set_cost()
     orig_Card_set_cost(self)
     local ck = self.config and self.config.center_key
-    if ck == 'j_uc_joker' or ck == 'p_uc_booster' then
+    if ck == 'j_omnificence_joker' or ck == 'p_omnificence_booster' then
         self.cost = 0
     end
 end
 
--- Replace the price tag with '??' for UC placeholder joker and booster
+-- Replace the price tag with '??' for OD placeholder joker and booster
 local orig_create_shop_card_ui = create_shop_card_ui
 function create_shop_card_ui(card, _type, area)
     orig_create_shop_card_ui(card, _type, area)
     local ck = card.config and card.config.center_key
-    if ck ~= 'j_uc_joker' and ck ~= 'p_uc_booster' then return end
+    if ck ~= 'j_omnificence_joker' and ck ~= 'p_omnificence_booster' then return end
     G.E_MANAGER:add_event(Event({
         trigger = 'after',
         delay = 0.5,
@@ -106,13 +106,13 @@ end
 -- Allow collection CardAreas to support click-to-highlight (one card at a time)
 local orig_can_highlight = CardArea.can_highlight
 function CardArea:can_highlight(card)
-    if self._uc_collection then return true end
+    if self._od_collection then return true end
     return orig_can_highlight(self, card)
 end
 
 local orig_add_to_highlighted = CardArea.add_to_highlighted
 function CardArea:add_to_highlighted(card, silent)
-    if not self._uc_collection then
+    if not self._od_collection then
         return orig_add_to_highlighted(self, card, silent)
     end
     -- Limit 1: evict previous highlight before adding new one
@@ -131,13 +131,13 @@ end
 local orig_buy_from_shop = G.FUNCS.buy_from_shop
 G.FUNCS.buy_from_shop = function(e)
     local card = e.config.ref_table
-    if not (card and card._uc_collection) then
+    if not (card and card._od_collection) then
         return orig_buy_from_shop(e)
     end
 
-    if card._uc_bh_select then
+    if card._od_bh_select then
         local center       = card.config.center
-        local planet_count = card._uc_bh_planet_count or 1
+        local planet_count = card._od_bh_planet_count or 1
         G.E_MANAGER:add_event(Event({func = function()
             G.FUNCS.exit_overlay_menu()
             return true
@@ -207,33 +207,33 @@ G.FUNCS.buy_from_shop = function(e)
     end}))
 end
 
--- Intercept use/open/redeem for all UC cards before use_card changes any game state.
--- j_uc_joker from the shop goes through buy_from_shop → buying_self → calculate instead,
+-- Intercept use/open/redeem for all OD cards before use_card changes any game state.
+-- j_omnificence_joker from the shop goes through buy_from_shop → buying_self → calculate instead,
 -- but we still need to catch it here for the pack-selection path.
-local UC_USE_MAP = {
-    j_uc_joker           = { menu = 'Joker' },
-    j_uc_joker_common    = { menu = 'Joker', rarity = 1 },
-    j_uc_joker_uncommon  = { menu = 'Joker', rarity = 2 },
-    j_uc_joker_rare      = { menu = 'Joker', rarity = 3 },
-    c_uc_soul            = { menu = 'Joker', rarity = 4 },
-    c_uc_black_hole      = { menu = 'BlackHole' },
-    c_uc_tarot           = { menu = 'Tarot' },
-    c_uc_planet          = { menu = 'Planet' },
-    c_uc_spectral        = { menu = 'Spectral' },
-    v_uc_voucher         = { menu = 'Voucher' },
-    p_uc_booster         = { menu = 'Booster Pack' },
+local OD_USE_MAP = {
+    j_omnificence_joker           = { menu = 'Joker' },
+    j_omnificence_joker_common    = { menu = 'Joker', rarity = 1 },
+    j_omnificence_joker_uncommon  = { menu = 'Joker', rarity = 2 },
+    j_omnificence_joker_rare      = { menu = 'Joker', rarity = 3 },
+    c_omnificence_soul            = { menu = 'Joker', rarity = 4 },
+    c_omnificence_black_hole      = { menu = 'BlackHole' },
+    c_omnificence_tarot           = { menu = 'Tarot' },
+    c_omnificence_planet          = { menu = 'Planet' },
+    c_omnificence_spectral        = { menu = 'Spectral' },
+    v_omnificence_voucher         = { menu = 'Voucher' },
+    p_omnificence_booster         = { menu = 'Booster Pack' },
 }
 
 local function make_filter(entry)
     local menu = entry.menu
     if menu == 'Joker' then
-        return UC.pool_count.filter_jokers(entry.rarity)
+        return OD.pool_count.filter_jokers(entry.rarity)
     elseif menu == 'Tarot' or menu == 'Planet' or menu == 'Spectral' then
-        return UC.pool_count.filter_consumables(menu)
+        return OD.pool_count.filter_consumables(menu)
     elseif menu == 'Voucher' then
-        return UC.pool_count.filter_vouchers()
+        return OD.pool_count.filter_vouchers()
     elseif menu == 'Booster Pack' then
-        return UC.pool_count.filter_boosters()
+        return OD.pool_count.filter_boosters()
     elseif menu == 'BlackHole' then
         return nil  -- open_collection_menu('BlackHole') builds its own pool
     end
@@ -242,12 +242,12 @@ end
 local orig_use_card = G.FUNCS.use_card
 G.FUNCS.use_card = function(e, mute, nosave)
     local card = e.config.ref_table
-    local entry = card and UC_USE_MAP[card.config.center_key]
+    local entry = card and OD_USE_MAP[card.config.center_key]
     if not entry then
-        if card and card._uc_collection then
-            if card._uc_bh_select then
+        if card and card._od_collection then
+            if card._od_bh_select then
                 local center       = card.config.center
-                local planet_count = card._uc_bh_planet_count or 1
+                local planet_count = card._od_bh_planet_count or 1
                 G.E_MANAGER:add_event(Event({func = function()
                     G.FUNCS.exit_overlay_menu()
                     return true
@@ -354,7 +354,7 @@ G.FUNCS.use_card = function(e, mute, nosave)
 
     -- Prevent re-spawning soul/black_hole for cards used from packs (buying_self path handles shop)
     local ck = card.config.center_key
-    if ck == 'c_uc_soul' or ck == 'c_uc_black_hole' then
+    if ck == 'c_omnificence_soul' or ck == 'c_omnificence_black_hole' then
         G.GAME.used_jokers[ck] = true
     end
 
@@ -363,9 +363,9 @@ G.FUNCS.use_card = function(e, mute, nosave)
         func = function()
             card:start_dissolve()
             if entry.menu == 'BlackHole' then
-                UC.open_collection_menu('BlackHole')
+                OD.open_collection_menu('BlackHole')
             else
-                UC.open_collection_menu(entry.menu, filter)
+                OD.open_collection_menu(entry.menu, filter)
             end
             return true
         end,

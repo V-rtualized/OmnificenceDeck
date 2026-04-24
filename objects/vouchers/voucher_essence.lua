@@ -7,6 +7,6 @@ SMODS.Voucher {
     unlocked = true,
     discovered = true,
     loc_vars = function(self, info_queue, card)
-        return { vars = { UC.pool_count.vouchers() } }
+        return { vars = { OD.pool_count.vouchers() } }
     end,
 }

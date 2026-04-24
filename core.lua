@@ -1,36 +1,44 @@
-UC = UC or {}
-UC.pool_count = SMODS.load_file("lib/pool_count.lua")()
+OD = OD or {}
+
+SMODS.Atlas({
+	key = "modicon",
+	path = "modicon.png",
+	px = 34,
+	py = 34,
+})
+
+OD.pool_count = SMODS.load_file("lib/pool_count.lua")()
 SMODS.load_file("lib/hooks.lua")()
 SMODS.load_file("lib/collection.lua")()
 
 for _, a in ipairs({
-	{ key = "joker", path = "unlimited_joker.png" },
-	{ key = "tarot", path = "unlimited_tarot.png" },
-	{ key = "planet", path = "unlimited_planet.png" },
-	{ key = "spectral", path = "unlimited_spectral.png" },
-	{ key = "booster", path = "unlimited_booster.png" },
-	{ key = "voucher", path = "unlimited_voucher.png" },
-	{ key = "unlimited_soul", path = "unlimited_soul.png" },
-	{ key = "unlimited_black_hole", path = "unlimited_black_hole.png" },
-	{ key = "unlimited_deck", path = "unlimited_deck.png" },
+	{ key = "joker", path = "joker_essence.png" },
+	{ key = "tarot", path = "tarot_essence.png" },
+	{ key = "planet", path = "planet_essence.png" },
+	{ key = "spectral", path = "spectral_essence.png" },
+	{ key = "booster", path = "booster_essence.png" },
+	{ key = "voucher", path = "voucher_essence.png" },
+	{ key = "soul_essence", path = "soul_essence.png" },
+	{ key = "black_hole_essence", path = "black_hole_essence.png" },
+	{ key = "omnificence_deck", path = "omnificence_deck.png" },
 }) do
 	SMODS.Atlas({ key = a.key, path = a.path, px = 71, py = 95 })
 end
 
 local object_files = {
-	"objects/jokers/unlimited_joker.lua",
-	"objects/jokers/unlimited_joker_common.lua",
-	"objects/jokers/unlimited_joker_uncommon.lua",
-	"objects/jokers/unlimited_joker_rare.lua",
-	"objects/consumables/unlimited_tarot.lua",
-	"objects/consumables/unlimited_planet.lua",
-	"objects/consumables/unlimited_spectral.lua",
-	"objects/consumables/unlimited_soul.lua",
-	"objects/consumables/unlimited_black_hole.lua",
+	"objects/jokers/joker_essence.lua",
+	"objects/jokers/joker_essence_common.lua",
+	"objects/jokers/joker_essence_uncommon.lua",
+	"objects/jokers/joker_essence_rare.lua",
+	"objects/consumables/tarot_essence.lua",
+	"objects/consumables/planet_essence.lua",
+	"objects/consumables/spectral_essence.lua",
+	"objects/consumables/soul_essence.lua",
+	"objects/consumables/black_hole_essence.lua",
 	"objects/backs/omnificence_deck.lua",
-	"objects/boosters/unlimited_booster.lua",
-	"objects/vouchers/unlimited_voucher.lua",
-	"objects/tags/unlimited_tag.lua",
+	"objects/boosters/booster_essence.lua",
+	"objects/vouchers/voucher_essence.lua",
+	"objects/tags/tag_essence.lua",
 }
 
 for _, path in ipairs(object_files) do

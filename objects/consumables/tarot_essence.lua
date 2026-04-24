@@ -8,14 +8,14 @@ SMODS.Consumable({
 	unlocked = true,
 	discovered = true,
 	loc_vars = function(self, info_queue, card)
-		return { vars = { UC.pool_count.consumables('Tarot') } }
+		return { vars = { OD.pool_count.consumables('Tarot') } }
 	end,
 	calculate = function(self, card, context)
 		if context.buying_self then
 			card:start_dissolve()
 			G.E_MANAGER:add_event(Event({
 				func = function()
-					UC.open_collection_menu('Tarot', UC.pool_count.filter_consumables('Tarot'))
+					OD.open_collection_menu('Tarot', OD.pool_count.filter_consumables('Tarot'))
 					return true
 				end,
 			}))

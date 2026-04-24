@@ -8,6 +8,6 @@ SMODS.Booster {
     unlocked = true,
     discovered = true,
     loc_vars = function(self, info_queue, card)
-        return { vars = { UC.pool_count.boosters() } }
+        return { vars = { OD.pool_count.boosters() } }
     end,
 }
