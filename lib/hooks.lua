@@ -1,3 +1,6 @@
+-- Resolved at load time so the prefixed G.ASSET_ATLAS key is available at runtime
+local _pc_atlas_key = (SMODS.current_mod and SMODS.current_mod.prefix or 'omnificence') .. '_playing_card'
+
 -- Maps card set types to their OD replacement keys
 local OD_CARD_MAP = {
     Joker    = 'j_omnificence_joker',
@@ -8,6 +11,26 @@ local OD_CARD_MAP = {
 
 local function od_active()
     return G.GAME and G.GAME.modifiers and G.GAME.modifiers.omnificence
+end
+
+-- Mark Base/Enhanced playing cards in packs/shop as suit/rank choices.
+-- The card keeps its natural appearance (enhancement, edition, seal visible);
+-- use_card intercepts it so the player picks suit and rank before it goes to deck.
+local orig_SMODS_create_card = SMODS.create_card
+function SMODS.create_card(t)
+    if od_active() and (t.area == G.pack_cards or t.area == G.shop_jokers)
+        and (t.set == 'Base' or t.set == 'Enhanced') then
+        local _card = orig_SMODS_create_card(t)
+        _card._od_pc_choice = true
+        -- Replace the random suit/rank face with the placeholder image
+        local pc_atlas = G.ASSET_ATLAS[_pc_atlas_key]
+        if pc_atlas and _card.children and _card.children.front then
+            _card.children.front.atlas = pc_atlas
+            _card.children.front:set_sprite_pos({x = 0, y = 0})
+        end
+        return _card
+    end
+    return orig_SMODS_create_card(t)
 end
 
 -- Mirror vanilla's soul-spawn probability checks so the RNG sequence is preserved.
@@ -175,8 +198,89 @@ end
 local orig_buy_from_shop = G.FUNCS.buy_from_shop
 G.FUNCS.buy_from_shop = function(e)
     local card = e.config.ref_table
+
+    -- Playing card with suit/rank choice pending (purchased from shop)
+    if card and card._od_pc_choice then
+        local cost = card.cost or 0
+        if cost > 0 then
+            ease_dollars(-cost)
+            inc_career_stat('c_shop_dollars_spent', cost)
+        end
+        G.GAME.round_scores.cards_purchased.amt = G.GAME.round_scores.cards_purchased.amt + 1
+        local from_area = card.area
+        if from_area then from_area:remove_card(card) end
+        OD._playing_card_selection = {
+            center_key = card.config.center_key,
+            edition    = card.edition,
+            seal       = card.seal,
+            from_pack  = false,
+        }
+        G.E_MANAGER:add_event(Event({func = function()
+            card:start_dissolve()
+            OD.open_collection_menu('PlayingCardSuit')
+            return true
+        end}))
+        return
+    end
+
     if not (card and card._od_collection) then
         return orig_buy_from_shop(e)
+    end
+
+    if card._od_pc_suit_select then
+        local suit = card._od_pc_suit_select
+        G.E_MANAGER:add_event(Event({func = function()
+            G.FUNCS.exit_overlay_menu()
+            return true
+        end}))
+        G.E_MANAGER:add_event(Event({func = function()
+            OD._playing_card_selection = OD._playing_card_selection or {}
+            OD._playing_card_selection.suit = suit
+            OD.open_collection_menu('PlayingCardRank')
+            return true
+        end}))
+        return
+    end
+
+    if card._od_pc_rank_select then
+        local rank      = card._od_pc_rank_select
+        local sel       = OD._playing_card_selection or {}
+        local front_key = (sel.suit or 'S') .. '_' .. rank
+        local from_pack = sel.from_pack
+        G.E_MANAGER:add_event(Event({func = function()
+            G.FUNCS.exit_overlay_menu()
+            return true
+        end}))
+        G.E_MANAGER:add_event(Event({func = function()
+            local front  = G.P_CARDS[front_key]
+            local center = G.P_CENTERS[sel.center_key or 'c_base']
+            local nc = Card(G.ROOM.T.x, G.ROOM.T.h, G.CARD_W, G.CARD_H, front, center)
+            if sel.edition and next(sel.edition) then nc:set_edition(sel.edition) end
+            if sel.seal then nc:set_seal(sel.seal); nc.ability.delay_seal = false end
+            G.playing_card = (G.playing_card or 0) + 1
+            nc.playing_card = G.playing_card
+            table.insert(G.playing_cards, nc)
+            nc:add_to_deck()
+            G.deck:emplace(nc)
+            play_sound('card1', 0.8, 0.6)
+            play_sound('generic1')
+            OD._playing_card_selection = nil
+            -- Mirror vanilla pack_choices decrement / pack close logic
+            if from_pack then
+                if G.GAME.pack_choices and G.GAME.pack_choices > 1 then
+                    if G.booster_pack and G.booster_pack.alignment.offset.py then
+                        G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+                        G.booster_pack.alignment.offset.py = nil
+                    end
+                    G.GAME.pack_choices = G.GAME.pack_choices - 1
+                else
+                    G.CONTROLLER.interrupt.focus = true
+                    G.FUNCS.end_consumeable(nil, 0.2)
+                end
+            end
+            return true
+        end}))
+        return
     end
 
     if card._od_bh_select then
@@ -301,6 +405,26 @@ end
 local orig_use_card = G.FUNCS.use_card
 G.FUNCS.use_card = function(e, mute, nosave)
     local card = e.config.ref_table
+
+    -- Intercept playing cards marked for suit/rank choice before vanilla add-to-deck path
+    if card and card._od_pc_choice then
+        e.config.button = nil
+        local from_area = card.area
+        if from_area then from_area:remove_card(card) end
+        OD._playing_card_selection = {
+            center_key = card.config.center_key,
+            edition    = card.edition,
+            seal       = card.seal,
+            from_pack  = (from_area == G.pack_cards),
+        }
+        G.E_MANAGER:add_event(Event({func = function()
+            card:start_dissolve()
+            OD.open_collection_menu('PlayingCardSuit')
+            return true
+        end}))
+        return
+    end
+
     local entry = card and OD_USE_MAP[card.config.center_key]
     if not entry then
         if card and card._od_collection then
@@ -408,7 +532,9 @@ G.FUNCS.use_card = function(e, mute, nosave)
     e.config.button = nil  -- prevent double-fire, mirrors what use_card does first
 
     local from_area = card.area
-    if from_area == G.pack_cards then OD._pack_inject = true end
+    if from_area == G.pack_cards then
+        OD._pack_inject = true
+    end
     -- Vouchers and boosters haven't had their cost deducted yet (unlike consumables,
     -- which go through buy_from_shop first and are already paid for).
     if from_area == G.shop_vouchers or from_area == G.shop_booster then

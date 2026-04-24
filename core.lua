@@ -21,6 +21,7 @@ for _, a in ipairs({
 	{ key = "soul_essence", path = "soul_essence.png" },
 	{ key = "black_hole_essence", path = "black_hole_essence.png" },
 	{ key = "omnificence_deck", path = "omnificence_deck.png" },
+	{ key = "playing_card", path = "playing_card_essence.png" },
 }) do
 	SMODS.Atlas({ key = a.key, path = a.path, px = 71, py = 95 })
 end

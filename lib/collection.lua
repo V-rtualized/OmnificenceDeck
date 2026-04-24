@@ -180,6 +180,81 @@ end
 function OD.open_collection_menu(card_type, filter_func, rows_override)
     assert(type(card_type) == 'string', "OD.open_collection_menu: card_type must be a string")
 
+    if card_type == 'PlayingCardSuit' then
+        local suit_pool = {}
+        for _, suit in pairs(SMODS.Suits) do
+            if not suit.in_mod_queue then
+                suit_pool[#suit_pool + 1] = suit
+            end
+        end
+        table.sort(suit_pool, function(a, b) return (a.order or 0) < (b.order or 0) end)
+
+        local n = #suit_pool
+        local rows = n <= 4 and {n} or {4, n - 4}
+        local args = {
+            center = 'c_base',
+            back_func = 'exit_overlay_menu',
+            no_materialize = true,
+            modify_card = function(card, suit_obj)
+                local front = G.P_CARDS[suit_obj.card_key .. '_A']
+                if front then card:set_base(front) end
+                card._od_collection     = true
+                card._od_pc_suit_select = suit_obj.card_key
+                card.cost = 0
+                create_shop_card_ui(card)
+                remove_price_tag(card)
+            end,
+        }
+        local prev_overlay = G.OVERLAY_MENU
+        G.OVERLAY_MENU = prev_overlay or true
+        local definition = SMODS.card_collection_UIBox(suit_pool, rows, args)
+        G.OVERLAY_MENU = prev_overlay
+        if G.your_collection then
+            for _, area in pairs(G.your_collection) do area._od_collection = true end
+        end
+        G.FUNCS.overlay_menu{definition = definition}
+        return
+    end
+
+    if card_type == 'PlayingCardRank' then
+        local sel  = OD._playing_card_selection or {}
+        local suit = sel.suit or 'S'
+
+        local rank_pool = {}
+        for _, rank in pairs(SMODS.Ranks) do
+            if not rank.in_mod_queue then
+                rank_pool[#rank_pool + 1] = rank
+            end
+        end
+        table.sort(rank_pool, function(a, b) return (a.sort_nominal or 0) > (b.sort_nominal or 0) end)
+
+        local n = #rank_pool
+        local rows = n <= 7 and {n} or {7, n - 7}
+        local args = {
+            center = 'c_base',
+            back_func = 'exit_overlay_menu',
+            no_materialize = true,
+            modify_card = function(card, rank_obj)
+                local front = G.P_CARDS[suit .. '_' .. rank_obj.card_key]
+                if front then card:set_base(front) end
+                card._od_collection     = true
+                card._od_pc_rank_select = rank_obj.card_key
+                card.cost = 0
+                create_shop_card_ui(card)
+                remove_price_tag(card)
+            end,
+        }
+        local prev_overlay = G.OVERLAY_MENU
+        G.OVERLAY_MENU = prev_overlay or true
+        local definition = SMODS.card_collection_UIBox(rank_pool, rows, args)
+        G.OVERLAY_MENU = prev_overlay
+        if G.your_collection then
+            for _, area in pairs(G.your_collection) do area._od_collection = true end
+        end
+        G.FUNCS.overlay_menu{definition = definition}
+        return
+    end
+
     if card_type == 'Tag' then
         G.FUNCS.overlay_menu{definition = build_tag_collection(filter_func)}
         return
