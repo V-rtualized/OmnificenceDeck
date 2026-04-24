@@ -1,5 +1,6 @@
 SMODS.Voucher {
     key = "voucher",
+    no_collection = true,
     atlas = "voucher",
     pos = { x = 0, y = 0 },
     soul_pos = { x = 1, y = 0 },

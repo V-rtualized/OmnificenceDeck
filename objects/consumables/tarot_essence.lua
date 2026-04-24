@@ -1,5 +1,6 @@
 SMODS.Consumable({
 	key = "tarot",
+	no_collection = true,
 	set = "Tarot",
 	atlas = "tarot",
 	pos = { x = 0, y = 0 },

@@ -1,5 +1,6 @@
 SMODS.Consumable {
     key = "spectral",
+    no_collection = true,
     set = "Spectral",
     atlas = "spectral",
     pos = { x = 0, y = 0 },

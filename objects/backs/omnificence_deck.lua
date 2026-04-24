@@ -7,9 +7,8 @@ SMODS.DrawStep {
         local game_back = G.GAME[self.back]
         if not (game_back and game_back.effect and game_back.effect.center) then return end
         if game_back.effect.center.key ~= 'b_omnificence_omnificence' then return end
-        if not (self.area and self.area.config.type == 'deck' and self.rank == 1) then return end
 
-        self.children.back:draw_shader('booster', nil, {(self.ID or 1) % 97 / 10.0, 0})
+        self.children.back:draw_shader('booster', nil, {(self.ID or 1) % 97 / 10.0, 0}, true)
     end,
 }
 
@@ -19,4 +18,7 @@ SMODS.Back {
     pos = { x = 0, y = 0 },
     unlocked = true,
     discovered = true,
+    apply = function(self)
+        G.GAME.modifiers.omnificence = true
+    end,
 }

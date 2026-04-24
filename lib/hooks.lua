@@ -6,6 +6,10 @@ local OD_CARD_MAP = {
     Spectral = 'c_omnificence_spectral',
 }
 
+local function od_active()
+    return G.GAME and G.GAME.modifiers and G.GAME.modifiers.omnificence
+end
+
 -- Mirror vanilla's soul-spawn probability checks so the RNG sequence is preserved.
 -- We consume the same pseudorandom values that vanilla would, then pass a forced_key
 -- into orig_create_card so vanilla's own check is skipped (guarded by not forced_key).
@@ -30,7 +34,7 @@ end
 -- Replace jokers/consumables in shop slots and pack openings
 local orig_create_card = create_card
 function create_card(_type, area, legendary, _rarity, skip_materialize, soulable, forced_key, key_append)
-    if area and not forced_key and (area == G.shop_jokers or area == G.pack_cards) then
+    if area and not forced_key and od_active() and (area == G.shop_jokers or area == G.pack_cards) then
         local od_key = check_soul_spawn(_type, soulable) or OD_CARD_MAP[_type]
         if od_key then
             return orig_create_card(_type, area, legendary, _rarity, skip_materialize, false, od_key, key_append)
@@ -42,7 +46,7 @@ end
 -- Replace shop booster packs with OD booster
 local orig_get_pack = get_pack
 function get_pack(_key, _type)
-    if _key == 'shop_pack' then
+    if _key == 'shop_pack' and od_active() then
         return G.P_CENTERS['p_omnificence_booster']
     end
     return orig_get_pack(_key, _type)
@@ -51,7 +55,10 @@ end
 -- Replace shop voucher with OD voucher
 local orig_add_voucher_to_shop = SMODS.add_voucher_to_shop
 function SMODS.add_voucher_to_shop(key, dont_save)
-    return orig_add_voucher_to_shop('v_omnificence_voucher', dont_save)
+    if od_active() then
+        return orig_add_voucher_to_shop('v_omnificence_voucher', dont_save)
+    end
+    return orig_add_voucher_to_shop(key, dont_save)
 end
 
 -- Force cost = 0 for OD placeholder joker and booster (shown as '??')
@@ -59,7 +66,7 @@ local orig_Card_set_cost = Card.set_cost
 function Card:set_cost()
     orig_Card_set_cost(self)
     local ck = self.config and self.config.center_key
-    if ck == 'j_omnificence_joker' or ck == 'p_omnificence_booster' then
+    if od_active() and (ck == 'j_omnificence_joker' or ck == 'p_omnificence_booster') then
         self.cost = 0
     end
 end
@@ -69,7 +76,7 @@ local orig_create_shop_card_ui = create_shop_card_ui
 function create_shop_card_ui(card, _type, area)
     orig_create_shop_card_ui(card, _type, area)
     local ck = card.config and card.config.center_key
-    if ck ~= 'j_omnificence_joker' and ck ~= 'p_omnificence_booster' then return end
+    if not od_active() or (ck ~= 'j_omnificence_joker' and ck ~= 'p_omnificence_booster') then return end
     G.E_MANAGER:add_event(Event({
         trigger = 'after',
         delay = 0.5,

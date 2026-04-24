@@ -1,5 +1,6 @@
 SMODS.Booster {
     key = "booster",
+    no_collection = true,
     atlas = "booster",
     pos = { x = 0, y = 0 },
     soul_pos = { x = 1, y = 0 },

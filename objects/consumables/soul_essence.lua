@@ -1,5 +1,6 @@
 SMODS.Consumable {
     key = "soul",
+    no_collection = true,
     set = "Spectral",
     atlas = "soul_essence",
     pos = { x = 0, y = 0 },

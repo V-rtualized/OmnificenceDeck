@@ -1,5 +1,23 @@
 return {
 	descriptions = {
+		Sleeve = {
+			sleeve_omnificence_omnificence = {
+				name = "Omnificence Sleeve",
+				text = {
+					"All {C:attention}Purchases{} are",
+					"{C:dark_edition}Unlimited{}",
+				},
+			},
+		},
+		Stake = {
+			stake_omnificence_omnificence = {
+				name = "Omnificence Stake",
+				text = {
+					"All {C:attention}Purchases{} are",
+					"{C:dark_edition}Unlimited{}",
+				},
+			},
+		},
 		Back = {
 			b_omnificence_omnificence = {
 				name = "Omnificence Deck",

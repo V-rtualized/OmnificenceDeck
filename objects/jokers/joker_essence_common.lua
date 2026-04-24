@@ -1,5 +1,6 @@
 SMODS.Joker {
     key = "joker_common",
+    no_collection = true,
     atlas = "joker",
     pos = { x = 0, y = 0 },
     soul_pos = { x = 1, y = 0 },

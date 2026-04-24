@@ -1,5 +1,6 @@
 SMODS.Consumable {
     key = "planet",
+    no_collection = true,
     set = "Planet",
     atlas = "planet",
     pos = { x = 0, y = 0 },

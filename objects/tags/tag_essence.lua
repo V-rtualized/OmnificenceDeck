@@ -1,5 +1,6 @@
 SMODS.Tag {
     key = "tag",
+    no_collection = true,
     atlas = "tags",
     prefix_config = { atlas = false },
     pos = { x = 3, y = 4 },

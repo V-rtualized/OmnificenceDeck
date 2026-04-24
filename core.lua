@@ -25,6 +25,8 @@ for _, a in ipairs({
 	SMODS.Atlas({ key = a.key, path = a.path, px = 71, py = 95 })
 end
 
+SMODS.Atlas({ key = "omnificence_stake", path = "omnificence_stake.png", px = 27, py = 27 })
+
 local object_files = {
 	"objects/jokers/joker_essence.lua",
 	"objects/jokers/joker_essence_common.lua",
@@ -36,6 +38,8 @@ local object_files = {
 	"objects/consumables/soul_essence.lua",
 	"objects/consumables/black_hole_essence.lua",
 	"objects/backs/omnificence_deck.lua",
+	"objects/stakes/omnificence_stake.lua",
+	"objects/sleeves/omnificence_sleeve.lua",
 	"objects/boosters/booster_essence.lua",
 	"objects/vouchers/voucher_essence.lua",
 	"objects/tags/tag_essence.lua",

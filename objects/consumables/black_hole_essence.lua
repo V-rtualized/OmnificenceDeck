@@ -1,5 +1,6 @@
 SMODS.Consumable {
     key = "black_hole",
+    no_collection = true,
     set = "Spectral",
     atlas = "black_hole_essence",
     pos = { x = 0, y = 0 },
