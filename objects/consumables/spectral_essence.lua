@@ -8,6 +8,7 @@ SMODS.Consumable {
     cost = 4,
     unlocked = true,
     discovered = true,
+    can_use = function(self, card) return true end,
     loc_vars = function(self, info_queue, card)
         return { vars = { OD.pool_count.consumables('Spectral') } }
     end,

@@ -27,7 +27,7 @@ end
 local CONFIGS = {
     Joker = {
         pool_key = 'Joker',
-        rows = {5},
+        rows = {5, 5, 5},
         args = {
             h_mod = 0.95,
             no_materialize = true,
@@ -177,7 +177,7 @@ local function build_tag_collection(filter_func)
     })
 end
 
-function OD.open_collection_menu(card_type, filter_func)
+function OD.open_collection_menu(card_type, filter_func, rows_override)
     assert(type(card_type) == 'string', "OD.open_collection_menu: card_type must be a string")
 
     if card_type == 'Tag' then
@@ -235,7 +235,7 @@ function OD.open_collection_menu(card_type, filter_func)
     args.back_func = args.back_func or 'exit_overlay_menu'
 
     local rows = {}
-    for i, v in ipairs(config.rows) do rows[i] = v end
+    for i, v in ipairs(rows_override or config.rows) do rows[i] = v end
 
     -- Set overlay flag before building the UIBox so collection display cards don't
     -- populate G.GAME.used_jokers (card.lua only skips that update when G.OVERLAY_MENU is truthy,

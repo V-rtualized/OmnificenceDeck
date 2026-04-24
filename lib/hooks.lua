@@ -119,6 +119,13 @@ function create_shop_card_ui(card, _type, area)
     }))
 end
 
+-- Clear pack-inject flag if the overlay is dismissed without a selection
+local orig_exit_overlay_menu = G.FUNCS.exit_overlay_menu
+G.FUNCS.exit_overlay_menu = function(e)
+    OD._pack_inject = nil
+    return orig_exit_overlay_menu(e)
+end
+
 -- Allow collection CardAreas to support click-to-highlight (one card at a time)
 local orig_can_highlight = CardArea.can_highlight
 function CardArea:can_highlight(card)
@@ -202,6 +209,13 @@ G.FUNCS.buy_from_shop = function(e)
     local cost       = card.cost or 0
     local sticker    = card.sticker
 
+    -- Capture and clear the flag synchronously so exit_overlay_menu (queued below)
+    -- doesn't wipe it before the card-creation event fires.
+    local should_inject = OD._pack_inject
+        and (set == 'Tarot' or set == 'Planet' or set == 'Spectral')
+        and G.pack_cards
+    OD._pack_inject = nil
+
     if cost > 0 then
         ease_dollars(-cost)
         inc_career_stat('c_shop_dollars_spent', cost)
@@ -221,25 +235,33 @@ G.FUNCS.buy_from_shop = function(e)
         return true
     end}))
     G.E_MANAGER:add_event(Event({func = function()
-        local target  = set == 'Joker' and G.jokers or G.consumeables
-        local nc = create_card(set, target, nil, nil, nil, nil, center_key)
-        if sticker then nc.sticker = sticker end
-        nc:add_to_deck()
-        target:emplace(nc)
-        play_sound('card1', 0.8, 0.6)
-        play_sound('generic1')
-        local eval, post = eval_card(nc, {buying_card = true, buying_self = true, card = nc})
-        SMODS.trigger_effects({eval, post}, nc)
-        SMODS.calculate_context({buying_card = true, card = nc})
-        if G.GAME.modifiers.inflation then
-            G.GAME.inflation = G.GAME.inflation + 1
-            G.E_MANAGER:add_event(Event({func = function()
-                for _, v in pairs(G.I.CARD) do if v.set_cost then v:set_cost() end end
-                return true
-            end}))
+        if should_inject then
+            local nc = create_card(set, G.pack_cards, nil, nil, nil, nil, center_key)
+            if sticker then nc.sticker = sticker end
+            G.pack_cards:emplace(nc)
+            play_sound('card1', 0.8, 0.6)
+            play_sound('generic1')
+        else
+            local target = set == 'Joker' and G.jokers or G.consumeables
+            local nc = create_card(set, target, nil, nil, nil, nil, center_key)
+            if sticker then nc.sticker = sticker end
+            nc:add_to_deck()
+            target:emplace(nc)
+            play_sound('card1', 0.8, 0.6)
+            play_sound('generic1')
+            local eval, post = eval_card(nc, {buying_card = true, buying_self = true, card = nc})
+            SMODS.trigger_effects({eval, post}, nc)
+            SMODS.calculate_context({buying_card = true, card = nc})
+            if G.GAME.modifiers.inflation then
+                G.GAME.inflation = G.GAME.inflation + 1
+                G.E_MANAGER:add_event(Event({func = function()
+                    for _, v in pairs(G.I.CARD) do if v.set_cost then v:set_cost() end end
+                    return true
+                end}))
+            end
+            G.CONTROLLER:save_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
+            G.CONTROLLER:recall_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
         end
-        G.CONTROLLER:save_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
-        G.CONTROLLER:recall_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
         return true
     end}))
 end
@@ -350,17 +372,31 @@ G.FUNCS.use_card = function(e, mute, nosave)
                         G.shop.alignment.offset.y = G.ROOM.T.y + 29
                     end
                     nc:open()
-                else -- Tarot, Planet, Spectral: add to consumeables (same result as Buy)
-                    local nc = create_card(set, G.consumeables, nil, nil, nil, nil, center_key)
-                    G.GAME.round_scores.cards_purchased.amt = G.GAME.round_scores.cards_purchased.amt + 1
-                    if set == 'Planet' then inc_career_stat('c_planets_bought', 1)
-                    elseif set == 'Tarot' then inc_career_stat('c_tarots_bought', 1) end
-                    if not center.discovered then discover_card(center) end
-                    nc:add_to_deck()
-                    G.consumeables:emplace(nc)
-                    play_sound('card1', 0.8, 0.6)
-                    play_sound('generic1')
-                    SMODS.calculate_context({buying_card = true, card = nc})
+                else -- Tarot, Planet, Spectral
+                    local should_inject = OD._pack_inject
+                        and (set == 'Tarot' or set == 'Planet' or set == 'Spectral')
+                        and G.pack_cards
+                    OD._pack_inject = nil
+                    if should_inject then
+                        if not center.discovered then discover_card(center) end
+                        if set == 'Planet' then inc_career_stat('c_planets_bought', 1)
+                        elseif set == 'Tarot' then inc_career_stat('c_tarots_bought', 1) end
+                        local nc = create_card(set, G.pack_cards, nil, nil, nil, nil, center_key)
+                        G.pack_cards:emplace(nc)
+                        play_sound('card1', 0.8, 0.6)
+                        play_sound('generic1')
+                    else
+                        local nc = create_card(set, G.consumeables, nil, nil, nil, nil, center_key)
+                        G.GAME.round_scores.cards_purchased.amt = G.GAME.round_scores.cards_purchased.amt + 1
+                        if set == 'Planet' then inc_career_stat('c_planets_bought', 1)
+                        elseif set == 'Tarot' then inc_career_stat('c_tarots_bought', 1) end
+                        if not center.discovered then discover_card(center) end
+                        nc:add_to_deck()
+                        G.consumeables:emplace(nc)
+                        play_sound('card1', 0.8, 0.6)
+                        play_sound('generic1')
+                        SMODS.calculate_context({buying_card = true, card = nc})
+                    end
                 end
                 return true
             end}))
@@ -372,6 +408,7 @@ G.FUNCS.use_card = function(e, mute, nosave)
     e.config.button = nil  -- prevent double-fire, mirrors what use_card does first
 
     local from_area = card.area
+    if from_area == G.pack_cards then OD._pack_inject = true end
     -- Vouchers and boosters haven't had their cost deducted yet (unlike consumables,
     -- which go through buy_from_shop first and are already paid for).
     if from_area == G.shop_vouchers or from_area == G.shop_booster then

@@ -20,7 +20,7 @@ SMODS.Consumable {
             card:start_dissolve()
             G.E_MANAGER:add_event(Event({
                 func = function()
-                    OD.open_collection_menu('Joker', OD.pool_count.filter_jokers(4))
+                    OD.open_collection_menu('Joker', OD.pool_count.filter_jokers(4), {5})
                     return true
                 end,
             }))
