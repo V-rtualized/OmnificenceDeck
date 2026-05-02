@@ -335,10 +335,11 @@ G.FUNCS.buy_from_shop = function(e)
         return
     end
 
-    local center_key = card.config.center_key
-    local set        = card.ability.set
-    local cost       = card.cost or 0
-    local sticker    = card.sticker
+    local center_key  = card.config.center_key
+    local set         = card.ability.set
+    local cost        = card.cost or 0
+    local sticker     = card.sticker
+    local buy_and_use = (e.config.id == 'buy_and_use')
 
     -- Capture and clear the flag synchronously so exit_overlay_menu (queued below)
     -- doesn't wipe it before the card-creation event fires.
@@ -346,6 +347,16 @@ G.FUNCS.buy_from_shop = function(e)
         and (set == 'Tarot' or set == 'Planet' or set == 'Spectral')
         and G.pack_cards
     OD._pack_inject = nil
+
+    -- Block plain "Buy" when consumable slots are full; "Buy and Use" is exempt
+    -- since the card is created and immediately consumed, leaving no net slot used.
+    if card.ability.consumeable and not buy_and_use and not should_inject then
+        local limit = G.consumeables.config.card_limit + (card.ability.card_limit or 0)
+        if #G.consumeables.cards >= limit then
+            e.disable_button = nil
+            return
+        end
+    end
 
     if cost > 0 then
         ease_dollars(-cost)
@@ -407,6 +418,12 @@ G.FUNCS.buy_from_shop = function(e)
             end
             G.CONTROLLER:save_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
             G.CONTROLLER:recall_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
+            if buy_and_use and set ~= 'Joker' then
+                G.E_MANAGER:add_event(Event({func = function()
+                    G.FUNCS.use_card({config = {ref_table = nc}}, true)
+                    return true
+                end}))
+            end
         end
         return true
     end}))
@@ -428,6 +445,48 @@ local OD_USE_MAP = {
     v_omnificence_voucher         = { menu = 'Voucher' },
     p_omnificence_booster         = { menu = 'Booster Pack' },
 }
+
+-- Hide the "Buy and Use" button on OD essence consumables in the shop.
+-- Using them already triggers the collection menu via calculate/buying_self,
+-- so a separate "Buy and Use" path makes no sense and would double-fire.
+local orig_can_buy_and_use = G.FUNCS.can_buy_and_use
+G.FUNCS.can_buy_and_use = function(e)
+    local card = e.config.ref_table
+    if card and card.config and OD_USE_MAP[card.config.center_key] then
+        e.UIBox.states.visible = false
+        e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+        e.config.button = nil
+        return
+    end
+    orig_can_buy_and_use(e)
+end
+
+-- Allow buying OD consumable essences even when consumable slots are full.
+-- The essence dissolves immediately on use and opens a selection menu, so it
+-- should not be gated by the current slot count.
+local orig_check_for_buy_space = G.FUNCS.check_for_buy_space
+G.FUNCS.check_for_buy_space = function(card)
+    if card and card.config and card.ability and card.ability.consumeable
+        and OD_USE_MAP[card.config.center_key] then
+        return true
+    end
+    return orig_check_for_buy_space(card)
+end
+
+-- Grey out the "Buy" button in collection menus when consumable slots are full.
+-- "Buy and Use" is unaffected (it uses can_buy_and_use, not can_buy).
+local orig_can_buy = G.FUNCS.can_buy
+G.FUNCS.can_buy = function(e)
+    orig_can_buy(e)
+    local card = e.config.ref_table
+    if card and card._od_collection and card.ability and card.ability.consumeable then
+        local limit = G.consumeables.config.card_limit + (card.ability.card_limit or 0)
+        if #G.consumeables.cards >= limit then
+            e.config.colour = G.C.UI.BACKGROUND_INACTIVE
+            e.config.button = nil
+        end
+    end
+end
 
 local function make_filter(entry)
     local menu = entry.menu
