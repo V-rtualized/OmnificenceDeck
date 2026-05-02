@@ -162,6 +162,20 @@ G.FUNCS.exit_overlay_menu = function(e)
     return orig_exit_overlay_menu(e)
 end
 
+-- Omnificence stake is always selectable regardless of deck win history;
+-- all stakes are always selectable when the Omnificence deck is selected.
+local orig_check_applied_stakes = SMODS.check_applied_stakes
+function SMODS.check_applied_stakes(stake, deck)
+    if stake and stake.key == 'stake_omnificence_omnificence' then return true end
+    if G.GAME and G.GAME.viewed_back
+        and G.GAME.viewed_back.effect
+        and G.GAME.viewed_back.effect.center
+        and G.GAME.viewed_back.effect.center.key == 'b_omnificence_omnificence' then
+        return true
+    end
+    return orig_check_applied_stakes(stake, deck)
+end
+
 -- Allow collection CardAreas to support click-to-highlight (one card at a time)
 local orig_can_highlight = CardArea.can_highlight
 function CardArea:can_highlight(card)
