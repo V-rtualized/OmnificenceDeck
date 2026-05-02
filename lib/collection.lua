@@ -34,9 +34,8 @@ local CONFIGS = {
             modify_card = function(card, center)
                 card.sticker = get_joker_win_sticker(center)
                 card._od_collection = true
-                card.cost = 0
+                card:set_cost()
                 create_shop_card_ui(card)
-                remove_price_tag(card)
             end,
         },
     },
