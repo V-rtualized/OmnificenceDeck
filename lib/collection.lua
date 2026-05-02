@@ -8,6 +8,32 @@
 -- Selecting a planet levels that hand type N times (N = planet count in pool).
 -- Selecting vanilla Black Hole levels every hand by 1.
 
+-- Forces a collection card to display its real art regardless of discovery state.
+-- Replicates the T-dimension adjustments that Card:set_ability skips for undiscovered
+-- cards, then re-runs set_sprites so the sprite is created at the correct size.
+local function bypass_discovery(card)
+    card.params.bypass_discovery_center = true
+    card.bypass_discovery_center = true
+    card.bypass_discovery_ui = true
+    local center, T = card.config.center, card.T
+    for key in pairs(T) do T[key] = card.original_T[key] end
+    if center.name == 'Half Joker'   then T.h = T.h / 1.7 end
+    if center.name == 'Photograph'   then T.h = T.h / 1.2 end
+    if center.name == 'Square Joker' then T.h = T.w end
+    if center.name == 'Wee Joker'    then T.h = T.h * 0.7; T.w = T.w * 0.7 end
+    if center.display_size and center.display_size.h then
+        T.h = T.h * (center.display_size.h / 95)
+    elseif center.pixel_size and center.pixel_size.h then
+        T.h = T.h * (center.pixel_size.h / 95)
+    end
+    if center.display_size and center.display_size.w then
+        T.w = T.w * (center.display_size.w / 71)
+    elseif center.pixel_size and center.pixel_size.w then
+        T.w = T.w * (center.pixel_size.w / 71)
+    end
+    card:set_sprites(center)
+end
+
 -- Schedules removal of the price tag UIBox for cards that are free.
 -- Must run after create_shop_card_ui's 0.43s event.
 local function remove_price_tag(card)
@@ -32,6 +58,7 @@ local CONFIGS = {
             h_mod = 0.95,
             no_materialize = true,
             modify_card = function(card, center)
+                bypass_discovery(card)
                 card.sticker = get_joker_win_sticker(center)
                 card._od_collection = true
                 card:set_cost()
@@ -44,6 +71,7 @@ local CONFIGS = {
         rows = {5, 6},
         args = {
             modify_card = function(card, center)
+                bypass_discovery(card)
                 card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
@@ -56,6 +84,7 @@ local CONFIGS = {
         rows = {6, 6},
         args = {
             modify_card = function(card, center)
+                bypass_discovery(card)
                 card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
@@ -68,6 +97,7 @@ local CONFIGS = {
         rows = {4, 5},
         args = {
             modify_card = function(card, center)
+                bypass_discovery(card)
                 card._od_collection = true
                 card.cost = 0
                 create_shop_card_ui(card)
@@ -81,6 +111,7 @@ local CONFIGS = {
         args = {
             area_type = 'voucher',
             modify_card = function(card, center, i, j)
+                bypass_discovery(card)
                 card.ability.order = i + (j - 1) * 4
                 card._od_collection = true
                 card.cost = 0
@@ -97,6 +128,7 @@ local CONFIGS = {
             w_mod = 1.25,
             card_scale = 1.27,
             modify_card = function(card, center)
+                bypass_discovery(card)
                 card._od_collection = true
                 card:set_cost()
                 create_shop_card_ui(card)
@@ -133,7 +165,6 @@ local function build_tag_collection(filter_func)
     local to_alert = {}
     for k, v in ipairs(tag_pool) do
         local temp_tag = Tag(v.key, true)
-        if not v.discovered then temp_tag.hide_ability = true end
         local tag_ui, tag_sprite = temp_tag:generate_UI()
         local tag_key = v.key
         tag_sprite.click = function(_self) G.FUNCS.od_select_tag({config = {ref_table = {key = tag_key}}}) end

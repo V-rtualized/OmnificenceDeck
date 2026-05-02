@@ -13,7 +13,13 @@ SMODS.Joker {
     end,
     calculate = function(self, card, context)
         if context.buying_self then
-            OD._joker_essence_edition = card.edition
+            OD._joker_essence_edition   = card.edition
+            OD._joker_essence_abilities = {
+                eternal     = card.ability.eternal,
+                perishable  = card.ability.perishable,
+                perish_tally = card.ability.perish_tally,
+                rental      = card.ability.rental,
+            }
             card:start_dissolve()
             G.E_MANAGER:add_event(Event({
                 func = function()

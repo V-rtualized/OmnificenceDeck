@@ -376,9 +376,19 @@ G.FUNCS.buy_from_shop = function(e)
             local target = set == 'Joker' and G.jokers or G.consumeables
             local nc = create_card(set, target, nil, nil, nil, nil, center_key)
             if set == 'Joker' then
-                local ess_ed = OD._joker_essence_edition
-                OD._joker_essence_edition = nil
-                if ess_ed and next(ess_ed) then nc:set_edition(ess_ed) end
+                local ess_ed  = OD._joker_essence_edition
+                local ess_ab  = OD._joker_essence_abilities
+                OD._joker_essence_edition   = nil
+                OD._joker_essence_abilities = nil
+                nc:set_edition(ess_ed and next(ess_ed) and ess_ed or false)
+                if ess_ab then
+                    if ess_ab.eternal    then nc:set_eternal(true) end
+                    if ess_ab.perishable then
+                        nc:set_perishable(true)
+                        nc.ability.perish_tally = ess_ab.perish_tally
+                    end
+                    if ess_ab.rental then nc:set_rental(true) end
+                end
             end
             if sticker then nc.sticker = sticker end
             nc:add_to_deck()
@@ -591,7 +601,13 @@ G.FUNCS.use_card = function(e, mute, nosave)
     end
 
     if entry.menu == 'Joker' then
-        OD._joker_essence_edition = card.edition
+        OD._joker_essence_edition   = card.edition
+        OD._joker_essence_abilities = {
+            eternal      = card.ability.eternal,
+            perishable   = card.ability.perishable,
+            perish_tally = card.ability.perish_tally,
+            rental       = card.ability.rental,
+        }
     end
     local filter = make_filter(entry)
     G.E_MANAGER:add_event(Event({

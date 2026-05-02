@@ -82,12 +82,13 @@ function M.boosters()
 end
 
 function M.tags()
-    if in_run() then
-        return #filter_od(SMODS.get_clean_pool('Tag'))
-    end
+    local ante = in_run() and G.GAME.round_resets.ante or nil
     local n = 0
     for _, t in pairs(G.P_TAGS or {}) do
-        if not is_od(t) then n = n + 1 end
+        if not is_od(t) and not t.no_collection
+        and not (ante and t.min_ante and t.min_ante > ante) then
+            n = n + 1
+        end
     end
     return n
 end
@@ -164,11 +165,12 @@ function M.filter_boosters()
 end
 
 function M.filter_tags()
-    if in_run() then
-        local keys = pool_key_set(filter_od(SMODS.get_clean_pool('Tag')))
-        return function(tag) return keys[tag.key] end
+    local ante = in_run() and G.GAME.round_resets.ante or nil
+    return function(tag)
+        if is_od(tag) or tag.no_collection then return false end
+        if ante and tag.min_ante and tag.min_ante > ante then return false end
+        return true
     end
-    return function(tag) return not is_od(tag) end
 end
 
 return M
