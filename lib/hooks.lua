@@ -106,6 +106,22 @@ function SMODS.add_voucher_to_shop(key, dont_save)
     return orig_add_voucher_to_shop(key, dont_save)
 end
 
+-- Voucher Tag creates its card directly (bypassing SMODS.add_voucher_to_shop), so we intercept
+-- Tag:apply_to_run to redirect it to the essence when OD is active.
+local orig_Tag_apply_to_run = Tag.apply_to_run
+function Tag:apply_to_run(_context)
+    if od_active() and self.key == 'tag_voucher' and _context.type == 'voucher_add' and not self.triggered then
+        self:yep('+', G.C.SECONDARY_SET.Voucher, function()
+            local card = SMODS.add_voucher_to_shop('v_omnificence_voucher', true)
+            if card then card.from_tag = true end
+            return true
+        end)
+        self.triggered = true
+        return true
+    end
+    return orig_Tag_apply_to_run(self, _context)
+end
+
 -- Force cost = 0 for OD placeholder joker and booster (shown as '??')
 local orig_Card_set_cost = Card.set_cost
 function Card:set_cost()
@@ -313,6 +329,8 @@ G.FUNCS.buy_from_shop = function(e)
     if card._od_bh_select then
         local center       = card.config.center
         local planet_count = card._od_bh_planet_count or 1
+        local from_pack    = OD._pack_inject and G.pack_cards
+        OD._pack_inject    = nil
         G.E_MANAGER:add_event(Event({func = function()
             G.FUNCS.exit_overlay_menu()
             return true
@@ -330,6 +348,18 @@ G.FUNCS.buy_from_shop = function(e)
                 end
             end
             temp:remove()
+            if from_pack then
+                if G.GAME.pack_choices and G.GAME.pack_choices > 1 then
+                    if G.booster_pack and G.booster_pack.alignment.offset.py then
+                        G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+                        G.booster_pack.alignment.offset.py = nil
+                    end
+                    G.GAME.pack_choices = G.GAME.pack_choices - 1
+                else
+                    G.CONTROLLER.interrupt.focus = true
+                    G.FUNCS.end_consumeable(nil, 0.2)
+                end
+            end
             return true
         end}))
         return
@@ -346,6 +376,8 @@ G.FUNCS.buy_from_shop = function(e)
     local should_inject = OD._pack_inject
         and (set == 'Tarot' or set == 'Planet' or set == 'Spectral')
         and G.pack_cards
+        and not buy_and_use
+    local from_pack = OD._pack_inject and not should_inject
     OD._pack_inject = nil
 
     -- Block plain "Buy" when consumable slots are full; "Buy and Use" is exempt
@@ -418,6 +450,18 @@ G.FUNCS.buy_from_shop = function(e)
             end
             G.CONTROLLER:save_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
             G.CONTROLLER:recall_cardarea_focus(set == 'Joker' and 'jokers' or 'consumeables')
+            if from_pack then
+                if G.GAME.pack_choices and G.GAME.pack_choices > 1 then
+                    if G.booster_pack and G.booster_pack.alignment.offset.py then
+                        G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+                        G.booster_pack.alignment.offset.py = nil
+                    end
+                    G.GAME.pack_choices = G.GAME.pack_choices - 1
+                else
+                    G.CONTROLLER.interrupt.focus = true
+                    G.FUNCS.end_consumeable(nil, 0.2)
+                end
+            end
             if buy_and_use and set ~= 'Joker' then
                 G.E_MANAGER:add_event(Event({func = function()
                     G.FUNCS.use_card({config = {ref_table = nc}}, true)
@@ -532,6 +576,8 @@ G.FUNCS.use_card = function(e, mute, nosave)
             if card._od_bh_select then
                 local center       = card.config.center
                 local planet_count = card._od_bh_planet_count or 1
+                local from_pack    = OD._pack_inject and G.pack_cards
+                OD._pack_inject    = nil
                 G.E_MANAGER:add_event(Event({func = function()
                     G.FUNCS.exit_overlay_menu()
                     return true
@@ -549,6 +595,18 @@ G.FUNCS.use_card = function(e, mute, nosave)
                         end
                     end
                     temp:remove()
+                    if from_pack then
+                        if G.GAME.pack_choices and G.GAME.pack_choices > 1 then
+                            if G.booster_pack and G.booster_pack.alignment.offset.py then
+                                G.booster_pack.alignment.offset.y = G.booster_pack.alignment.offset.py
+                                G.booster_pack.alignment.offset.py = nil
+                            end
+                            G.GAME.pack_choices = G.GAME.pack_choices - 1
+                        else
+                            G.CONTROLLER.interrupt.focus = true
+                            G.FUNCS.end_consumeable(nil, 0.2)
+                        end
+                    end
                     return true
                 end}))
                 return
@@ -647,6 +705,14 @@ G.FUNCS.use_card = function(e, mute, nosave)
         if from_area == G.shop_vouchers then
             G.GAME.used_vouchers[card.config.center_key] = true
             set_voucher_usage(card)
+            -- Clear spawn flags so the essence doesn't re-appear in subsequent rounds within the same ante.
+            -- The fresh card created in the collection handler doesn't have shop_voucher set, so
+            -- Card:redeem() never clears these flags itself.
+            if G.GAME.current_round.voucher and G.GAME.current_round.voucher.spawn then
+                for k in pairs(G.GAME.current_round.voucher.spawn) do
+                    G.GAME.current_round.voucher.spawn[k] = false
+                end
+            end
         end
     end
 
