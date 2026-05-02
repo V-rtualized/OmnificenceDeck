@@ -53,7 +53,7 @@ end
 local CONFIGS = {
     Joker = {
         pool_key = 'Joker',
-        rows = {5, 5, 5},
+        rows = {5, 5},
         args = {
             h_mod = 0.95,
             no_materialize = true,
@@ -70,6 +70,7 @@ local CONFIGS = {
         pool_key = 'Tarot',
         rows = {5, 6},
         args = {
+            w_mod = 1.2,
             modify_card = function(card, center)
                 bypass_discovery(card)
                 card._od_collection = true
@@ -83,6 +84,7 @@ local CONFIGS = {
         pool_key = 'Planet',
         rows = {6, 6},
         args = {
+            w_mod = 1.2,
             modify_card = function(card, center)
                 bypass_discovery(card)
                 card._od_collection = true
@@ -96,6 +98,7 @@ local CONFIGS = {
         pool_key = 'Spectral',
         rows = {4, 5},
         args = {
+            w_mod = 1.2,
             modify_card = function(card, center)
                 bypass_discovery(card)
                 card._od_collection = true
@@ -207,6 +210,22 @@ local function build_tag_collection(filter_func)
     })
 end
 
+local function od_card_collection_UIBox(pool, rows, args)
+    args = args or {}
+    local definition = SMODS.card_collection_UIBox(pool, rows, args)
+    local function patch(node)
+        if type(node) ~= 'table' then return end
+        local children = node.nodes or {}
+        if node.n == G.UIT.R and node.config and node.config.no_fill
+            and #children == 1 and type(children[1]) == 'table' and children[1].n == G.UIT.O then
+            node.config.padding = 0.5
+        end
+        for _, child in ipairs(node.nodes or {}) do patch(child) end
+    end
+    patch(definition)
+    return definition
+end
+
 function OD.open_collection_menu(card_type, filter_func, rows_override)
     assert(type(card_type) == 'string', "OD.open_collection_menu: card_type must be a string")
 
@@ -237,7 +256,7 @@ function OD.open_collection_menu(card_type, filter_func, rows_override)
         }
         local prev_overlay = G.OVERLAY_MENU
         G.OVERLAY_MENU = prev_overlay or true
-        local definition = SMODS.card_collection_UIBox(suit_pool, rows, args)
+        local definition = od_card_collection_UIBox(suit_pool, rows, args)
         G.OVERLAY_MENU = prev_overlay
         if G.your_collection then
             for _, area in pairs(G.your_collection) do area._od_collection = true end
@@ -276,7 +295,7 @@ function OD.open_collection_menu(card_type, filter_func, rows_override)
         }
         local prev_overlay = G.OVERLAY_MENU
         G.OVERLAY_MENU = prev_overlay or true
-        local definition = SMODS.card_collection_UIBox(rank_pool, rows, args)
+        local definition = od_card_collection_UIBox(rank_pool, rows, args)
         G.OVERLAY_MENU = prev_overlay
         if G.your_collection then
             for _, area in pairs(G.your_collection) do area._od_collection = true end
@@ -316,7 +335,7 @@ function OD.open_collection_menu(card_type, filter_func, rows_override)
 
         local prev_overlay = G.OVERLAY_MENU
         G.OVERLAY_MENU = prev_overlay or true
-        local definition = SMODS.card_collection_UIBox(pool, rows, args)
+        local definition = od_card_collection_UIBox(pool, rows, args)
         G.OVERLAY_MENU = prev_overlay
 
         if G.your_collection then
@@ -347,7 +366,7 @@ function OD.open_collection_menu(card_type, filter_func, rows_override)
     -- but the UIBox argument is evaluated before overlay_menu sets the flag).
     local prev_overlay = G.OVERLAY_MENU
     G.OVERLAY_MENU = prev_overlay or true
-    local definition = SMODS.card_collection_UIBox(pool, rows, args)
+    local definition = od_card_collection_UIBox(pool, rows, args)
     G.OVERLAY_MENU = prev_overlay
 
     -- Tag the CardAreas so our can_highlight/add_to_highlighted hooks enable click-to-highlight
