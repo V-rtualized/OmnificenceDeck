@@ -19,8 +19,12 @@ SMODS.Stake({
 	key = "omnificence",
 	atlas = "omnificence_stake",
 	pos = { x = 0, y = 0 },
-	above_stake = "stake_gold",
-	applied_stakes = { "stake_gold" },
+	above_stake = "gold",
+	applied_stakes = { "gold" },
+	prefix_config = {
+		above_stake = { mod = false },
+		applied_stakes = { mod = false },
+	},
 	unlocked = true,
 	modifiers = function()
 		G.GAME.modifiers.omnificence = true
