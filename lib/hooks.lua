@@ -44,17 +44,20 @@ end
 -- into orig_create_card so vanilla's own check is skipped (guarded by not forced_key).
 local function check_soul_spawn(_type, soulable)
     if not soulable then return nil end
+    if G.GAME.banned_keys['c_soul'] then return nil end
     local od_key = nil
     if (_type == 'Tarot' or _type == 'Spectral' or _type == 'Tarot_Planet') and
         not (G.GAME.used_jokers['c_omnificence_soul'] and not SMODS.showman('c_omnificence_soul')) then
-        if pseudorandom('soul_'..(_type)..G.GAME.round_resets.ante) > 0.997 then
+        if pseudorandom('soul_'..(MP.should_use_the_order() and 'c_soul' or _type)..G.GAME.round_resets.ante) > 0.997 then
             od_key = 'c_omnificence_soul'
         end
     end
     if (_type == 'Planet' or _type == 'Spectral') and
         not (G.GAME.used_jokers['c_omnificence_black_hole'] and not SMODS.showman('c_omnificence_black_hole')) then
-        if pseudorandom('soul_'..(_type)..G.GAME.round_resets.ante) > 0.997 then
-            od_key = 'c_omnificence_black_hole'
+        if pseudorandom('soul_'..(MP.should_use_the_order() and 'c_black_hole' or _type)..G.GAME.round_resets.ante) > 0.997 then
+            if not (MP.should_use_the_order() and od_key) then
+                od_key = 'c_omnificence_black_hole'
+            end
         end
     end
     return od_key
